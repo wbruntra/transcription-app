@@ -48,39 +48,70 @@ function App() {
       dc.onmessage = (event) => {
         try {
           const msg = JSON.parse(event.data)
+          console.log('Received message:', msg) // Debug logging
+          
           if (msg.type === 'transcription_event') {
             const txt = msg.input_audio_transcription?.text
             if (txt) {
               setStreamedTranscription(prev => prev + txt + ' ')
               setEditedTranscription(prev => prev + txt + ' ')
             }
+          } else if (msg.type === 'error') {
+            console.error('Transcription error:', msg)
+            setError(msg.message || 'Transcription error occurred')
           }
         } catch (e) {
           console.error('DataChannel parse error', e)
+          setError('Failed to parse transcription message')
         }
+      }
+
+      // Add error handler
+      dc.onerror = (error) => {
+        console.error('DataChannel error:', error)
+        setError('Data channel error occurred')
       }
 
       // Create offer and set up session
       const offer = await pc.createOffer()
       await pc.setLocalDescription(offer)
 
+      // Wait for ICE gathering to complete
+      await new Promise((resolve) => {
+        if (pc.iceGatheringState === 'complete') {
+          resolve()
+        } else {
+          const checkState = () => {
+            if (pc.iceGatheringState === 'complete') {
+              pc.removeEventListener('icegatheringstatechange', checkState)
+              resolve()
+            }
+          }
+          pc.addEventListener('icegatheringstatechange', checkState)
+        }
+      })
+
       const sdpResponse = await fetch(`https://api.openai.com/v1/realtime`, {
         method: 'POST',
-        body: offer.sdp,
+        body: pc.localDescription.sdp,
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/sdp',
         },
       })
 
+      if (!sdpResponse.ok) {
+        throw new Error(`Failed to establish WebRTC connection: ${sdpResponse.status}`)
+      }
+
       const answer = {
         type: 'answer',
         sdp: await sdpResponse.text(),
       }
-      await pc.setRemoteDescription(answer)
+      await pc.setRemoteDescription(new RTCSessionDescription(answer))
 
-      // Initialize transcription session
-      dc.send(JSON.stringify({
+      console.log('Initializing transcription session...')
+      const initMessage = {
         type: 'transcription_session.update',
         input_audio_format: 'pcm16',
         input_audio_transcription: {
@@ -99,7 +130,7 @@ function App() {
         },
         include: ['item.input_audio_transcription.logprobs']
       }))
-
+      console.log('Sent initialization message:', initMessage)
       setIsRecording(true)
       setError('')
       setStreamedTranscription('')
