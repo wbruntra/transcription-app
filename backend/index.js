@@ -29,22 +29,7 @@ app.post('/realtime-token', async (req, res) => {
   try {
     const response = await axios.post(
       'https://api.openai.com/v1/realtime/transcription_sessions',
-      {
-        model: 'gpt-4o-transcribe', // From docs: supported models
-        input_audio_format: 'pcm16', // Default format per docs
-        input_audio_transcription: {
-          language: 'en' // Optional but recommended for accuracy
-        },
-        turn_detection: {
-          type: 'server_vad',
-          threshold: 0.5,
-          prefix_padding_ms: 300,
-          silence_duration_ms: 500
-        },
-        input_audio_noise_reduction: {
-          type: 'near_field'
-        }
-      },
+      {}, // Empty body as per example implementation
       { 
         headers: { 
           Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
