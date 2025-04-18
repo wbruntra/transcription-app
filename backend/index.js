@@ -1,12 +1,18 @@
 const express = require('express')
 const multer = require('multer')
 const cors = require('cors')
+const axios = require('axios')
 const { OpenAI } = require('openai')
 const fs = require('fs').promises
 const ffmpeg = require('fluent-ffmpeg')
+const logger = require('morgan')
+
 require('dotenv').config()
 
 const app = express()
+
+app.use(logger('dev'))
+
 const upload = multer({ dest: 'uploads/' })
 
 // Middleware
@@ -16,6 +22,25 @@ app.use(express.json())
 // Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+})
+
+// Endpoint to obtain ephemeral token for real-time transcription
+app.post('/realtime-token', async (req, res) => {
+  try {
+    const response = await axios.post(
+      'https://api.openai.com/v1/realtime/transcription_sessions',
+      {},
+      { headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` } }
+    )
+    // Return the client_secret token for WebSocket authentication
+    // Return both session_id and client_secret for WebSocket auth
+    const sessionId = response.data.id;
+    const clientSecret = response.data.client_secret;
+    res.json({ session_id: sessionId, token: clientSecret });
+  } catch (error) {
+    console.error('Realtime token error:', error.response?.data || error.message)
+    res.status(500).json({ error: 'Failed to create real-time transcription session' })
+  }
 })
 
 // Convert WEBM to MP3
