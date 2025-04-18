@@ -29,17 +29,48 @@ app.post('/realtime-token', async (req, res) => {
   try {
     const response = await axios.post(
       'https://api.openai.com/v1/realtime/transcription_sessions',
-      {},
-      { headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` } }
+      {
+        model: 'gpt-4o-transcribe', // From docs: supported models
+        input_audio_format: 'pcm16', // Default format per docs
+        input_audio_transcription: {
+          language: 'en' // Optional but recommended for accuracy
+        },
+        turn_detection: {
+          type: 'server_vad',
+          threshold: 0.5,
+          prefix_padding_ms: 300,
+          silence_duration_ms: 500
+        },
+        input_audio_noise_reduction: {
+          type: 'near_field'
+        }
+      },
+      { 
+        headers: { 
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        } 
+      }
     )
-    // Return the client_secret token for WebSocket authentication
-    // Return both session_id and client_secret for WebSocket auth
-    const sessionId = response.data.id;
-    const clientSecret = response.data.client_secret;
-    res.json({ session_id: sessionId, token: clientSecret });
+
+    if (!response.data.id || !response.data.client_secret) {
+      throw new Error('Invalid response from OpenAI API')
+    }
+
+    res.json({ 
+      session_id: response.data.id,
+      token: response.data.client_secret.value || response.data.client_secret
+    })
   } catch (error) {
-    console.error('Realtime token error:', error.response?.data || error.message)
-    res.status(500).json({ error: 'Failed to create real-time transcription session' })
+    console.error('Realtime token error:', {
+      message: error.message,
+      response: error.response?.data,
+      stack: error.stack
+    })
+    res.status(500).json({ 
+      error: 'Failed to create real-time transcription session',
+      details: error.response?.data || error.message
+    })
   }
 })
 
