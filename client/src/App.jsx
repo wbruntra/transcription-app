@@ -58,7 +58,7 @@ function App() {
       const offer = await pc.createOffer()
       await pc.setLocalDescription(offer)
 
-      const sdpResponse = await fetch(`https://api.openai.com/v1/realtime?model=gpt-4o`, {
+      const sdpResponse = await fetch(`https://api.openai.com/v1/realtime`, {
         method: 'POST',
         body: offer.sdp,
         headers: {
