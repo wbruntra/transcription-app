@@ -129,7 +129,7 @@ function App() {
           type: 'near_field'
         },
         include: ['item.input_audio_transcription.logprobs']
-      }))
+      }
       console.log('Sent initialization message:', initMessage)
       setIsRecording(true)
       setError('')
