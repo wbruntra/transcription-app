@@ -34,9 +34,15 @@ function App() {
       // Add audio track
       pc.addTrack(stream.getTracks()[0])
 
-      // Create data channel
+      // Create data channel with open/error handlers
       const dc = pc.createDataChannel('transcription')
       realtimeDcRef.current = dc
+
+      // Wait for data channel to open before sending config
+      await new Promise((resolve, reject) => {
+        dc.onopen = resolve
+        dc.onerror = (err) => reject(new Error('Data channel failed to open'))
+      })
 
       // Handle transcription messages
       dc.onmessage = (event) => {
@@ -100,6 +106,7 @@ function App() {
       setEditedTranscription('')
     } catch (err) {
       setError(`Realtime error: ${err.message}`)
+      console.error('Realtime transcription error:', err)
       stopRealtime()
     }
   }
@@ -111,7 +118,11 @@ function App() {
       realtimeStreamRef.current = null
     }
     if (realtimeDcRef.current) {
-      realtimeDcRef.current.close()
+      try {
+        realtimeDcRef.current.close()
+      } catch (e) {
+        console.error('Error closing data channel:', e)
+      }
       realtimeDcRef.current = null
     }
     if (realtimePcRef.current) {
