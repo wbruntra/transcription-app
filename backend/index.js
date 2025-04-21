@@ -1,5 +1,4 @@
 const express = require('express')
-const multer = require('multer') // Note: This is no longer needed here, but I'll leave it as is if used elsewhere; otherwise, it can be removed in future refinements.
 const cors = require('cors')
 const logger = require('morgan')
 const path = require('path')
