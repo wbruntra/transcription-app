@@ -34,15 +34,11 @@ function App() {
       // Add audio track
       pc.addTrack(stream.getTracks()[0])
 
-      // Create data channel with open/error handlers
-      const dc = pc.createDataChannel('transcription')
+      // Create data channel with open/error handlers (must match OpenAI 'oai-events' channel)
+      const dc = pc.createDataChannel('oai-events')
       realtimeDcRef.current = dc
 
-      // Wait for data channel to open before sending config
-      await new Promise((resolve, reject) => {
-        dc.onopen = resolve
-        dc.onerror = (err) => reject(new Error('Data channel failed to open'))
-      })
+      // Do not await data channel open here; will send init after negotiation
 
       // Handle transcription messages
       dc.onmessage = (event) => {
@@ -91,7 +87,10 @@ function App() {
         }
       })
 
-      const sdpResponse = await fetch(`https://api.openai.com/v1/realtime`, {
+      // Negotiate WebRTC session with OpenAI realtime endpoint for transcription
+      // Do not include model param for transcription sessions
+      const sdpUrl = `https://api.openai.com/v1/realtime?session_id=${sessionId}`
+      const sdpResponse = await fetch(sdpUrl, {
         method: 'POST',
         body: pc.localDescription.sdp,
         headers: {
@@ -110,6 +109,7 @@ function App() {
       }
       await pc.setRemoteDescription(new RTCSessionDescription(answer))
 
+      // Configure transcription session: prepare initialization message
       console.log('Initializing transcription session...')
       const initMessage = {
         type: 'transcription_session.update',
@@ -130,11 +130,21 @@ function App() {
         },
         include: ['item.input_audio_transcription.logprobs']
       }
-      console.log('Sent initialization message:', initMessage)
-      setIsRecording(true)
-      setError('')
-      setStreamedTranscription('')
-      setEditedTranscription('')
+      // Send init configuration once data channel is open
+      const sendInit = () => {
+        realtimeDcRef.current.send(JSON.stringify(initMessage))
+        console.log('Sent initialization message:', initMessage)
+        // Reset state and enter recording mode
+        setError('')
+        setStreamedTranscription('')
+        setEditedTranscription('')
+        setIsRecording(true)
+      }
+      if (realtimeDcRef.current.readyState === 'open') {
+        sendInit()
+      } else {
+        realtimeDcRef.current.onopen = sendInit
+      }
     } catch (err) {
       setError(`Realtime error: ${err.message}`)
       console.error('Realtime transcription error:', err)
