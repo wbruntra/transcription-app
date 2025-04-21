@@ -1,5 +1,5 @@
 body {
-  font-family: Arial, sans-serif;
+  font-family: Inter, sans-serif;
   margin: 0;
   padding: 0;
   background-color: #f0f0f0;
@@ -60,12 +60,14 @@ button:disabled {
 
 // New styles for recording indicator
 .recording-indicator {
-  width: 20px;
-  height: 20px;
+  $recording-indicator-size: 15px;
+
+  width: $recording-indicator-size;
+  height: $recording-indicator-size;
   border-radius: 50%;
   background-color: gray;
-  margin-right: 15px;  // Space from button
-  margin-top: 10px;
+  margin-right: 10px;  // Space from button
+  margin-top: 7px;
   // margin-bottom: 10px;
   
   &.active {

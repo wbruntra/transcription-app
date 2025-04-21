@@ -9,4 +9,11 @@ export default defineConfig({
       '/transcribe': 'http://localhost:3001',
     },
   },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        quietDeps: true,
+      },
+    },
+  },
 })

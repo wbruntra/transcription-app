@@ -83,7 +83,6 @@ function App() {
       setIsRecording(true)
       setError('')
       setTranscription('')
-      // setEditedTranscription('')  // This line has been removed as per the request
     } catch (err) {
       setError('Failed to access microphone. Please allow microphone access.')
     }
@@ -110,7 +109,7 @@ function App() {
       })
       setTranscription(response.data.transcription)
       setEditedTranscription((prevEdited) =>
-        prevEdited ? prevEdited + '\n' + response.data.transcription : response.data.transcription,
+        prevEdited ? prevEdited + ' ' + response.data.transcription : response.data.transcription,
       )
       setError('')
     } catch (err) {
@@ -155,7 +154,15 @@ function App() {
   return (
     <div className="container">
       <h1>OpenAI-Powered Audio Transcription</h1>
-      <div className="controls">
+      {/* New addition: Colored box for keyboard commands */}
+      <div className="alert alert-info mt-3">
+        <h5>Keyboard Commands</h5>
+        <ul>
+          <li>Ctrl + Space: Start/Stop Recording</li>
+          <li>Ctrl + X: Cancel Recording (while recording)</li>
+        </ul>
+      </div>
+      <div className="controls mt-3">
         <div className="d-flex">
           <div className={`recording-indicator ${isRecording ? 'active' : ''}`}></div>
           <button
@@ -201,14 +208,6 @@ function App() {
       >
         Status: {statusText}
       </p>
-      {/* New addition: Colored box for keyboard commands */}
-      <div className="alert alert-info mt-3">
-        <h5>Keyboard Commands</h5>
-        <ul>
-          <li>Ctrl + Space: Start/Stop Recording</li>
-          <li>Ctrl + X: Cancel Recording (while recording)</li>
-        </ul>
-      </div>
     </div>
   )
 }

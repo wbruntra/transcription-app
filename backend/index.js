@@ -4,10 +4,15 @@ const cors = require('cors')
 const { OpenAI } = require('openai')
 const fs = require('fs').promises
 const ffmpeg = require('fluent-ffmpeg')
+const logger = require('morgan')
+
 require('dotenv').config()
 
 const app = express()
 const upload = multer({ dest: 'uploads/' })
+
+// Middleware for logging requests
+app.use(logger('dev'))
 
 // Middleware
 app.use(cors())

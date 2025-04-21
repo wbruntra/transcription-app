@@ -1,0 +1,73 @@
+// bootstrap4-compatibility.scss
+// Compatibility layer to map Bootstrap 4 "left" and "right" utility classes to Bootstrap 5 "start" and "end"
+// Only includes classes that changed between Bootstrap 4 and 5 (e.g., ml-*, mr-*, pl-*, pr-*, etc.)
+
+// Import Bootstrap variables the old way to avoid namespace issues
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+
+// Margin Utilities (ml-* -> ms-*, mr-* -> me-*)
+@each $breakpoint in (null, sm, md, lg, xl) {
+  $infix: if($breakpoint == null, "", "-#{$breakpoint}");
+
+  // Margin Left (ml-*) -> Margin Start
+  .ml#{$infix}-0 { margin-left: 0 !important; }
+  .ml#{$infix}-1 { margin-left: map-get($spacers, 1) !important; }
+  .ml#{$infix}-2 { margin-left: map-get($spacers, 2) !important; }
+  .ml#{$infix}-3 { margin-left: map-get($spacers, 3) !important; }
+  .ml#{$infix}-4 { margin-left: map-get($spacers, 4) !important; }
+  .ml#{$infix}-5 { margin-left: map-get($spacers, 5) !important; }
+  .ml#{$infix}-auto { margin-left: auto !important; }
+
+  // Margin Right (mr-*) -> Margin End
+  .mr#{$infix}-0 { margin-right: 0 !important; }
+  .mr#{$infix}-1 { margin-right: map-get($spacers, 1) !important; }
+  .mr#{$infix}-2 { margin-right: map-get($spacers, 2) !important; }
+  .mr#{$infix}-3 { margin-right: map-get($spacers, 3) !important; }
+  .mr#{$infix}-4 { margin-right: map-get($spacers, 4) !important; }
+  .mr#{$infix}-5 { margin-right: map-get($spacers, 5) !important; }
+  .mr#{$infix}-auto { margin-right: auto !important; }
+}
+
+// Padding Utilities (pl-* -> ps-*, pr-* -> pe-*)
+@each $breakpoint in (null, sm, md, lg, xl) {
+  $infix: if($breakpoint == null, "", "-#{$breakpoint}");
+
+  // Padding Left (pl-*) -> Padding Start
+  .pl#{$infix}-0 { padding-left: 0 !important; }
+  .pl#{$infix}-1 { padding-left: map-get($spacers, 1) !important; }
+  .pl#{$infix}-2 { padding-left: map-get($spacers, 2) !important; }
+  .pl#{$infix}-3 { padding-left: map-get($spacers, 3) !important; }
+  .pl#{$infix}-4 { padding-left: map-get($spacers, 4) !important; }
+  .pl#{$infix}-5 { padding-left: map-get($spacers, 5) !important; }
+
+  // Padding Right (pr-*) -> Padding End
+  .pr#{$infix}-0 { padding-right: 0 !important; }
+  .pr#{$infix}-1 { padding-right: map-get($spacers, 1) !important; }
+  .pr#{$infix}-2 { padding-right: map-get($spacers, 2) !important; }
+  .pr#{$infix}-3 { padding-right: map-get($spacers, 3) !important; }
+  .pr#{$infix}-4 { padding-right: map-get($spacers, 4) !important; }
+  .pr#{$infix}-5 { padding-right: map-get($spacers, 5) !important; }
+}
+
+// Text Alignment Utilities (text-left -> text-start, text-right -> text-end)
+.text-left { text-align: left !important; }
+.text-right { text-align: right !important; }
+@each $breakpoint in (sm, md, lg, xl) {
+  .text-#{$breakpoint}-left { text-align: left !important; }
+  .text-#{$breakpoint}-right { text-align: right !important; }
+}
+
+// Float Utilities (float-left -> float-start, float-right -> float-end)
+.float-left { float: left !important; }
+.float-right { float: right !important; }
+@each $breakpoint in (sm, md, lg, xl) {
+  .float-#{$breakpoint}-left { float: left !important; }
+  .float-#{$breakpoint}-right { float: right !important; }
+}
+
+// Border Utilities (border-left* -> border-start*, border-right* -> border-end*)
+.border-left-0 { border-left: 0 !important; }
+.border-right-0 { border-right: 0 !important; }
+.border-left { border-left: $border-width solid !important; }
+.border-right { border-right: $border-width solid !important; }
