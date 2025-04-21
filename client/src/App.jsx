@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react'
 import axios from 'axios'
-import './index.css'
 
 function App() {
   const [transcription, setTranscription] = useState('')
@@ -59,7 +58,11 @@ function App() {
     try {
       const response = await axios.post('http://localhost:3001/transcribe', formData)
       setTranscription(response.data.transcription)
-      setEditedTranscription(prevEdited => prevEdited + '\n' + response.data.transcription) // Updated to append the new transcription
+      setEditedTranscription((prevEdited) =>
+        prevEdited
+          ? prevEdited + '\n' + response.data.transcription
+          : response.data.transcription
+      ) // Only add newline if prevEdited is not empty
       setError('')
     } catch (err) {
       const errorMsg = err.response?.data?.error || err.message
@@ -78,7 +81,11 @@ function App() {
     <div className="container">
       <h1>Audio Transcription</h1>
       <div className="controls">
-        <button onClick={isRecording ? stopRecording : startRecording} disabled={loading}>
+        <button
+          className={isRecording ? 'recording' : ''}
+          onClick={isRecording ? stopRecording : startRecording}
+          disabled={loading}
+        >
           {isRecording ? 'Stop Recording' : 'Start Recording'}
         </button>
         <p style={{ visibility: loading ? 'visible' : 'hidden' }}>Transcribing...</p>
