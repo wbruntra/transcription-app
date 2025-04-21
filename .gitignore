@@ -19,7 +19,6 @@ yarn-debug.log*
 yarn-error.log*
 
 scrape/data
-ecosystem.config.js
 
 .env
 temp.js

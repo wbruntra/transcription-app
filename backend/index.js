@@ -5,6 +5,10 @@ const { OpenAI } = require('openai')
 const fs = require('fs').promises
 const ffmpeg = require('fluent-ffmpeg')
 const logger = require('morgan')
+// Serve static files from client/dist
+const path = require('path')
+
+const react_client_directory = path.join(__dirname, '../client/dist')
 
 require('dotenv').config()
 
