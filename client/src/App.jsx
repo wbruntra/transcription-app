@@ -102,21 +102,21 @@ function App() {
         <div className="d-flex">
           <div className={`recording-indicator ${isRecording ? 'active' : ''}`}></div>{' '}
           <button
-            className={`btn btn-primary ${isRecording ? 'recording' : ''}`}
+            className={`btn btn-sm btn-primary ${isRecording ? 'recording' : ''}`}
             onClick={isRecording ? stopRecording : startRecording}
             disabled={loading}
           >
             {isRecording ? 'Stop Recording' : 'Start Recording'}
           </button>
         </div>
-        {/* Flashing red circle indicator */}
-        <p style={{ visibility: loading ? 'visible' : 'hidden' }}>Transcribing...</p>
+        <p className="my-2" style={{ visibility: loading ? 'visible' : 'hidden' }}>
+          Transcribing...
+        </p>
         <p>Press Spacebar to start/stop recording.</p> {/* Added visible documentation */}
       </div>
       {error && <p className="error">{error}</p>}
 
       <div className="transcription">
-        <h2>Transcription:</h2>
         <textarea
           value={editedTranscription}
           onChange={handleTranscriptionEdit}
