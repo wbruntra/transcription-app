@@ -7,7 +7,7 @@ function App() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
-  const [shouldTranscribe, setShouldTranscribe] = useState(true)  // New state to control transcription
+  const shouldTranscribeRef = useRef(true)  // Changed to useRef for immediate updates
   const mediaRecorderRef = useRef(null)
   const audioChunksRef = useRef([])
   const textareaRef = useRef(null)  // Ref for textarea (though focus check is removed)
@@ -20,10 +20,10 @@ function App() {
         if (event.code === 'Space') {
           event.preventDefault();  // Prevent default to avoid scrolling or other actions
           if (!isRecording) {
-            setShouldTranscribe(true);  // Set to transcribe for new recordings
+            shouldTranscribeRef.current = true;  // Set to transcribe for new recordings
             startRecording();
           } else {
-            setShouldTranscribe(true);  // Ensure transcription on regular stop
+            shouldTranscribeRef.current = true;  // Ensure transcription on regular stop
             stopRecording();
           }
         } else if (event.code === 'KeyX' && isRecording) {
@@ -55,12 +55,12 @@ function App() {
       }
 
       mediaRecorderRef.current.onstop = async () => {
-        if (shouldTranscribe) {
+        if (shouldTranscribeRef.current) {
           const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm;codecs=opus' })
           await transcribeAudio(audioBlob)
         }
         stream.getTracks().forEach((track) => track.stop())
-        setShouldTranscribe(true);  // Reset for next use
+        shouldTranscribeRef.current = true;  // Reset for next use
       }
 
       mediaRecorderRef.current.start()
@@ -121,7 +121,7 @@ function App() {
 
   // Handle cancel recording (stops without transcribing)
   const cancelRecording = () => {
-    setShouldTranscribe(false);  // Set to not transcribe
+    shouldTranscribeRef.current = false;  // Set to not transcribe
     stopRecording();  // Stop the recording
   }
 
@@ -139,7 +139,7 @@ function App() {
           <button
             className={`btn btn-sm btn-primary ${isRecording ? 'recording' : ''}`}
             onClick={() => {
-              setShouldTranscribe(true);
+              shouldTranscribeRef.current = true;
               isRecording ? stopRecording() : startRecording();
             }}
             disabled={loading}
