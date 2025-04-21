@@ -81,7 +81,7 @@ function App() {
         <button onClick={isRecording ? stopRecording : startRecording} disabled={loading}>
           {isRecording ? 'Stop Recording' : 'Start Recording'}
         </button>
-        {loading && <p>Transcribing...</p>}
+        <p style={{ visibility: loading ? 'visible' : 'hidden' }}>Transcribing...</p>
       </div>
       {error && <p className="error">{error}</p>}
 
