@@ -148,7 +148,7 @@ function App() {
           </button>
           {isRecording && (  // Show cancel button only during recording
             <button
-              className="btn btn-sm btn-warning ml-2"
+              className="btn btn-sm btn-warning ms-2"
               onClick={cancelRecording}
             >
               Cancel Recording
