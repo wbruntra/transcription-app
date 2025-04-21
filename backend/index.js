@@ -35,7 +35,7 @@ const convertToMp3 = (inputPath, outputPath) => {
 }
 
 // Transcription endpoint
-app.post('/transcribe', upload.single('audio'), async (req, res) => {
+app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
   try {
     const audioFile = req.file
     if (!audioFile) {
@@ -43,10 +43,10 @@ app.post('/transcribe', upload.single('audio'), async (req, res) => {
     }
 
     console.log('Received file:', {
-      originalName: audioFile.originalname,
-      mimetype: audioFile.mimetype,
+      // originalName: audioFile.originalname,
+      // mimetype: audioFile.mimetype,
       size: audioFile.size,
-      path: audioFile.path,
+      // path: audioFile.path,
     })
 
     // Convert to MP3
@@ -54,18 +54,18 @@ app.post('/transcribe', upload.single('audio'), async (req, res) => {
     await convertToMp3(audioFile.path, mp3Path)
 
     // Log start time before sending to OpenAI
-    const startTime = Date.now();
-    console.log('Sending transcription request to OpenAI at:', new Date().toISOString());
+    const startTime = Date.now()
+    // console.log('Sending transcription request to OpenAI at:', new Date().toISOString());
 
     // Call OpenAI transcription API
     const transcription = await openai.audio.transcriptions.create({
       file: require('fs').createReadStream(mp3Path),
-      model: 'gpt-4o-mini-transcribe', 
+      model: 'gpt-4o-mini-transcribe',
     })
 
     // Log end time and duration after receiving response
-    const endTime = Date.now();
-    console.log('Received response from OpenAI at:', new Date().toISOString(), 'Duration:', (endTime - startTime) / 1000, 'seconds');
+    const endTime = Date.now()
+    console.log('Transcription Response Time:', (endTime - startTime) / 1000, 'seconds')
 
     // Clean up files
     await fs.unlink(audioFile.path)
@@ -79,7 +79,7 @@ app.post('/transcribe', upload.single('audio'), async (req, res) => {
 })
 
 // Start server
-const PORT = 3001
+const PORT = process.env.PORT || 12050
 app.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`)
 })

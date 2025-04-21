@@ -104,7 +104,7 @@ function App() {
     formData.append('audio', audioBlob, 'recording.webm')
 
     try {
-      const response = await axios.post('http://localhost:3001/transcribe', formData, {
+      const response = await axios.post('/api/transcribe', formData, {
         signal: abortControllerRef.current.signal, // Pass the signal for abortion
       })
       setTranscription(response.data.transcription)
