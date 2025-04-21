@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import axios from 'axios'
 
 function App() {
@@ -9,6 +9,25 @@ function App() {
   const [isRecording, setIsRecording] = useState(false)
   const mediaRecorderRef = useRef(null)
   const audioChunksRef = useRef([])
+
+  // Add effect for keyboard event listener
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      if (event.code === 'Space' && !event.repeat && !loading) {  // Use Spacebar and prevent repeated triggers
+        event.preventDefault();  // Prevent default to avoid scrolling or other actions
+        if (!isRecording) {
+          startRecording();
+        } else {
+          stopRecording();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress);  // Cleanup on unmount
+    };
+  }, [isRecording, loading]);  // Re-run if isRecording or loading changes
 
   // Start recording
   const startRecording = async () => {
@@ -89,6 +108,7 @@ function App() {
           {isRecording ? 'Stop Recording' : 'Start Recording'}
         </button>
         <p style={{ visibility: loading ? 'visible' : 'hidden' }}>Transcribing...</p>
+        <p>Press Spacebar to start/stop recording.</p>  {/* Added visible documentation */}
       </div>
       {error && <p className="error">{error}</p>}
 
