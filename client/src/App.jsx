@@ -146,9 +146,15 @@ function App() {
     setEditedTranscription(e.target.value)
   }
 
+  const statusText = isRecording
+    ? `Recording, ${recordingTime} seconds`
+    : loading
+    ? 'Transcribing...'
+    : 'Idle'
+
   return (
     <div className="container">
-      <h1>Audio Transcription</h1>
+      <h1>OpenAI-Powered Audio Transcription</h1>
       <div className="controls">
         <div className="d-flex">
           <div className={`recording-indicator ${isRecording ? 'active' : ''}`}></div>
@@ -173,10 +179,7 @@ function App() {
             </button>
           )}
         </div>
-        <p className="my-2" style={{ visibility: loading ? 'visible' : 'hidden' }}>
-          Transcribing...
-        </p>
-        <p>
+        <p className="my-2">
           Press Ctrl + Spacebar to start/stop recording at any time, and Ctrl + X to cancel
           recording.
         </p>{' '}
@@ -185,7 +188,8 @@ function App() {
       {error && <p className="error">{error}</p>}
 
       <div className="transcription">
-        {isRecording && <p>Recording: {recordingTime} seconds</p>} {/* Add timer display here */}
+        {/* <p>{isRecording ? `Recording: ${recordingTime} seconds` : 'Idle'}</p>{' '} */}
+        {/* Add timer display here */}
         <textarea
           ref={textareaRef} // Attach ref to textarea
           value={editedTranscription}
@@ -195,6 +199,12 @@ function App() {
           placeholder="Transcription will appear here..."
         />
       </div>
+      <p
+        className="my-2"
+        // style={{ visibility: loading ? 'visible' : 'hidden' }}
+      >
+        Status: {statusText}
+      </p>
     </div>
   )
 }
