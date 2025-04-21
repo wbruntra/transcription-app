@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
 import axios from 'axios'
-import './index.scss'  // Ensure SCSS is imported
 
 function App() {
   const [transcription, setTranscription] = useState('')
@@ -14,21 +13,22 @@ function App() {
   // Add effect for keyboard event listener
   useEffect(() => {
     const handleKeyPress = (event) => {
-      if (event.code === 'Space' && !event.repeat && !loading) {  // Use Spacebar and prevent repeated triggers
-        event.preventDefault();  // Prevent default to avoid scrolling or other actions
+      if (event.code === 'Space' && !event.repeat && !loading) {
+        // Use Spacebar and prevent repeated triggers
+        event.preventDefault() // Prevent default to avoid scrolling or other actions
         if (!isRecording) {
-          startRecording();
+          startRecording()
         } else {
-          stopRecording();
+          stopRecording()
         }
       }
-    };
+    }
 
-    document.addEventListener('keydown', handleKeyPress);
+    document.addEventListener('keydown', handleKeyPress)
     return () => {
-      document.removeEventListener('keydown', handleKeyPress);  // Cleanup on unmount
-    };
-  }, [isRecording, loading]);  // Re-run if isRecording or loading changes
+      document.removeEventListener('keydown', handleKeyPress) // Cleanup on unmount
+    }
+  }, [isRecording, loading]) // Re-run if isRecording or loading changes
 
   // Start recording
   const startRecording = async () => {
@@ -79,9 +79,7 @@ function App() {
       const response = await axios.post('http://localhost:3001/transcribe', formData)
       setTranscription(response.data.transcription)
       setEditedTranscription((prevEdited) =>
-        prevEdited
-          ? prevEdited + '\n' + response.data.transcription
-          : response.data.transcription
+        prevEdited ? prevEdited + '\n' + response.data.transcription : response.data.transcription,
       ) // Only add newline if prevEdited is not empty
       setError('')
     } catch (err) {
@@ -101,16 +99,19 @@ function App() {
     <div className="container">
       <h1>Audio Transcription</h1>
       <div className="controls">
-        <div className={isRecording ? 'recording-indicator active' : 'recording-indicator'}></div>  {/* Flashing red circle indicator */}
-        <button
-          className={isRecording ? 'recording' : ''}
-          onClick={isRecording ? stopRecording : startRecording}
-          disabled={loading}
-        >
-          {isRecording ? 'Stop Recording' : 'Start Recording'}
-        </button>
+        <div className="d-flex">
+          <div className={`recording-indicator ${isRecording ? 'active' : ''}`}></div>{' '}
+          <button
+            className={`btn btn-primary ${isRecording ? 'recording' : ''}`}
+            onClick={isRecording ? stopRecording : startRecording}
+            disabled={loading}
+          >
+            {isRecording ? 'Stop Recording' : 'Start Recording'}
+          </button>
+        </div>
+        {/* Flashing red circle indicator */}
         <p style={{ visibility: loading ? 'visible' : 'hidden' }}>Transcribing...</p>
-        <p>Press Spacebar to start/stop recording.</p>  {/* Added visible documentation */}
+        <p>Press Spacebar to start/stop recording.</p> {/* Added visible documentation */}
       </div>
       {error && <p className="error">{error}</p>}
 
