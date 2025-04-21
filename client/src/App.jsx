@@ -7,11 +7,13 @@ function App() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
+  const [recordingTime, setRecordingTime] = useState(0) // New state for timer
   const shouldTranscribeRef = useRef(true) // Changed to useRef for immediate updates
   const mediaRecorderRef = useRef(null)
   const audioChunksRef = useRef([])
   const textareaRef = useRef(null) // Ref for textarea (though focus check is removed)
   const abortControllerRef = useRef(null) // Ref for AbortController
+  const timerRef = useRef(null) // Ref for timer interval
 
   // Add effect for keyboard event listener
   useEffect(() => {
@@ -38,6 +40,20 @@ function App() {
       document.removeEventListener('keydown', handleKeyPress) // Cleanup on unmount
     }
   }, [isRecording, loading]) // Re-run if isRecording or loading changes
+
+  // Add effect for recording timer
+  useEffect(() => {
+    if (isRecording) {
+      timerRef.current = setInterval(() => {
+        setRecordingTime((prevTime) => prevTime + 1) // Increment time every second
+      }, 1000)
+    } else {
+      clearInterval(timerRef.current) // Clear interval when not recording
+      setRecordingTime(0) // Reset timer
+    }
+
+    return () => clearInterval(timerRef.current) // Cleanup on unmount or state change
+  }, [isRecording]) // Depends on isRecording
 
   // Start recording
   const startRecording = async () => {
@@ -169,6 +185,7 @@ function App() {
       {error && <p className="error">{error}</p>}
 
       <div className="transcription">
+        {isRecording && <p>Recording: {recordingTime} seconds</p>} {/* Add timer display here */}
         <textarea
           ref={textareaRef} // Attach ref to textarea
           value={editedTranscription}
