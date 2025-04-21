@@ -36,7 +36,7 @@ function App() {
       setIsRecording(true)
       setError('')
       setTranscription('')
-      setEditedTranscription('') // Clear textarea on new recording
+      // setEditedTranscription('')  // This line has been removed as per the request
     } catch (err) {
       setError('Failed to access microphone. Please allow microphone access.')
     }
@@ -59,7 +59,7 @@ function App() {
     try {
       const response = await axios.post('http://localhost:3001/transcribe', formData)
       setTranscription(response.data.transcription)
-      setEditedTranscription(response.data.transcription) // Initialize textarea
+      setEditedTranscription(prevEdited => prevEdited + '\n' + response.data.transcription) // Updated to append the new transcription
       setError('')
     } catch (err) {
       const errorMsg = err.response?.data?.error || err.message
