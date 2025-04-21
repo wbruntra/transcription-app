@@ -7,9 +7,10 @@ function App() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
+  const [shouldTranscribe, setShouldTranscribe] = useState(true)  // New state to control transcription
   const mediaRecorderRef = useRef(null)
   const audioChunksRef = useRef([])
-  const textareaRef = useRef(null)  // Ref for textarea to check focus
+  const textareaRef = useRef(null)  // Ref for textarea (though focus check is removed)
   const abortControllerRef = useRef(null)  // Ref for AbortController
 
   // Add effect for keyboard event listener
@@ -19,13 +20,14 @@ function App() {
         event.code === 'Space' &&
         event.ctrlKey &&  // Check for Ctrl key
         !event.repeat &&
-        !loading &&
-        textareaRef.current !== document.activeElement  // Ensure textarea is not focused
+        !loading
       ) {
         event.preventDefault();  // Prevent default to avoid scrolling or other actions
         if (!isRecording) {
+          setShouldTranscribe(true);  // Set to transcribe for new recordings
           startRecording();
         } else {
+          setShouldTranscribe(true);  // Ensure transcription on regular stop
           stopRecording();
         }
       }
@@ -53,9 +55,12 @@ function App() {
       }
 
       mediaRecorderRef.current.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm;codecs=opus' })
-        await transcribeAudio(audioBlob)
+        if (shouldTranscribe) {
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm;codecs=opus' })
+          await transcribeAudio(audioBlob)
+        }
         stream.getTracks().forEach((track) => track.stop())
+        setShouldTranscribe(true);  // Reset for next use
       }
 
       mediaRecorderRef.current.start()
@@ -105,13 +110,19 @@ function App() {
     }
   }
 
-  // Handle cancel transcription
+  // Handle cancel transcription (for ongoing transcription)
   const cancelTranscription = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();  // Abort the request
       setLoading(false);
       setError('Transcription canceled.');
     }
+  }
+
+  // Handle cancel recording (stops without transcribing)
+  const cancelRecording = () => {
+    setShouldTranscribe(false);  // Set to not transcribe
+    stopRecording();  // Stop the recording
   }
 
   // Handle textarea changes
@@ -127,11 +138,22 @@ function App() {
           <div className={`recording-indicator ${isRecording ? 'active' : ''}`}></div>
           <button
             className={`btn btn-sm btn-primary ${isRecording ? 'recording' : ''}`}
-            onClick={isRecording ? stopRecording : startRecording}
+            onClick={() => {
+              setShouldTranscribe(true);
+              isRecording ? stopRecording() : startRecording();
+            }}
             disabled={loading}
           >
             {isRecording ? 'Stop Recording' : 'Start Recording'}
           </button>
+          {isRecording && (  // Show cancel button only during recording
+            <button
+              className="btn btn-sm btn-warning ml-2"
+              onClick={cancelRecording}
+            >
+              Cancel Recording
+            </button>
+          )}
           {loading && (
             <button
               className="btn btn-sm btn-danger ml-2"
@@ -144,7 +166,7 @@ function App() {
         <p className="my-2" style={{ visibility: loading ? 'visible' : 'hidden' }}>
           Transcribing...
         </p>
-        <p>Press Ctrl + Spacebar to start/stop recording (when not focused on textarea).</p> {/* Updated documentation */}
+        <p>Press Ctrl + Spacebar to start/stop recording at any time.</p> {/* Updated documentation */}
       </div>
       {error && <p className="error">{error}</p>}
 
