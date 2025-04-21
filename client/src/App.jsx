@@ -16,19 +16,19 @@ function App() {
   // Add effect for keyboard event listener
   useEffect(() => {
     const handleKeyPress = (event) => {
-      if (
-        event.code === 'Space' &&
-        event.ctrlKey &&  // Check for Ctrl key
-        !event.repeat &&
-        !loading
-      ) {
-        event.preventDefault();  // Prevent default to avoid scrolling or other actions
-        if (!isRecording) {
-          setShouldTranscribe(true);  // Set to transcribe for new recordings
-          startRecording();
-        } else {
-          setShouldTranscribe(true);  // Ensure transcription on regular stop
-          stopRecording();
+      if (event.ctrlKey && !event.repeat && !loading) {
+        if (event.code === 'Space') {
+          event.preventDefault();  // Prevent default to avoid scrolling or other actions
+          if (!isRecording) {
+            setShouldTranscribe(true);  // Set to transcribe for new recordings
+            startRecording();
+          } else {
+            setShouldTranscribe(true);  // Ensure transcription on regular stop
+            stopRecording();
+          }
+        } else if (event.code === 'KeyX' && isRecording) {
+          event.preventDefault();  // Prevent default
+          cancelRecording();  // Call cancelRecording if recording is active
         }
       }
     };
@@ -166,7 +166,7 @@ function App() {
         <p className="my-2" style={{ visibility: loading ? 'visible' : 'hidden' }}>
           Transcribing...
         </p>
-        <p>Press Ctrl + Spacebar to start/stop recording at any time.</p> {/* Updated documentation */}
+        <p>Press Ctrl + Spacebar to start/stop recording at any time, and Ctrl + X to cancel recording.</p> {/* Updated documentation */}
       </div>
       {error && <p className="error">{error}</p>}
 
