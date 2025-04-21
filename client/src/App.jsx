@@ -205,6 +205,14 @@ function App() {
       >
         Status: {statusText}
       </p>
+      {/* New addition: Colored box for keyboard commands */}
+      <div className="alert alert-info mt-3">
+        <h5>Keyboard Commands</h5>
+        <ul>
+          <li>Ctrl + Space: Start/Stop Recording</li>
+          <li>Ctrl + X: Cancel Recording (while recording)</li>
+        </ul>
+      </div>
     </div>
   )
 }
