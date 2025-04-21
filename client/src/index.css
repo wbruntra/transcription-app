@@ -47,23 +47,6 @@ button:disabled {
   text-align: center;
 }
 
-.mode-toggle {
-  margin-bottom: 1rem;
-}
-
-.mode-toggle label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-}
-
-.realtime-indicator {
-  color: green;
-  margin-bottom: 0.5rem;
-  font-style: italic;
-}
-
 .transcription {
   margin-top: 20px;
   padding: 10px;

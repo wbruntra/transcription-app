@@ -1,184 +1,18 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import axios from 'axios'
 import './index.css'
 
 function App() {
   const [transcription, setTranscription] = useState('')
-  const [editedTranscription, setEditedTranscription] = useState('')
-  const [isRealtime, setIsRealtime] = useState(false)
-  const [streamedTranscription, setStreamedTranscription] = useState('')
+  const [editedTranscription, setEditedTranscription] = useState('') // For textarea edits
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const mediaRecorderRef = useRef(null)
   const audioChunksRef = useRef([])
-  const realtimePcRef = useRef(null)
-  const realtimeDcRef = useRef(null)
-  const realtimeStreamRef = useRef(null)
 
-  // Start realtime transcription
-  const startRealtime = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      realtimeStreamRef.current = stream
-
-      // Get session token from backend
-      const tokenRes = await axios.post('http://localhost:3001/realtime-token')
-      const { session_id: sessionId, token } = tokenRes.data
-      if (!sessionId) throw new Error('Missing session_id from server')
-
-      // Create peer connection
-      const pc = new RTCPeerConnection()
-      realtimePcRef.current = pc
-
-      // Add audio track
-      pc.addTrack(stream.getTracks()[0])
-
-      // Create data channel with open/error handlers (must match OpenAI 'oai-events' channel)
-      const dc = pc.createDataChannel('oai-events')
-      realtimeDcRef.current = dc
-
-      // Do not await data channel open here; will send init after negotiation
-
-      // Handle transcription messages
-      dc.onmessage = (event) => {
-        try {
-          const msg = JSON.parse(event.data)
-          console.log('Received message:', msg) // Debug logging
-          
-          if (msg.type === 'transcription_event') {
-            const txt = msg.input_audio_transcription?.text
-            if (txt) {
-              setStreamedTranscription(prev => prev + txt + ' ')
-              setEditedTranscription(prev => prev + txt + ' ')
-            }
-          } else if (msg.type === 'error') {
-            console.error('Transcription error:', msg)
-            setError(msg.message || 'Transcription error occurred')
-          }
-        } catch (e) {
-          console.error('DataChannel parse error', e)
-          setError('Failed to parse transcription message')
-        }
-      }
-
-      // Add error handler
-      dc.onerror = (error) => {
-        console.error('DataChannel error:', error)
-        setError('Data channel error occurred')
-      }
-
-      // Create offer and set up session
-      const offer = await pc.createOffer()
-      await pc.setLocalDescription(offer)
-
-      // Wait for ICE gathering to complete
-      await new Promise((resolve) => {
-        if (pc.iceGatheringState === 'complete') {
-          resolve()
-        } else {
-          const checkState = () => {
-            if (pc.iceGatheringState === 'complete') {
-              pc.removeEventListener('icegatheringstatechange', checkState)
-              resolve()
-            }
-          }
-          pc.addEventListener('icegatheringstatechange', checkState)
-        }
-      })
-
-      // Negotiate WebRTC session with OpenAI realtime endpoint for transcription
-      // Do not include model param for transcription sessions
-      const sdpUrl = `https://api.openai.com/v1/realtime?session_id=${sessionId}`
-      const sdpResponse = await fetch(sdpUrl, {
-        method: 'POST',
-        body: pc.localDescription.sdp,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/sdp',
-        },
-      })
-
-      if (!sdpResponse.ok) {
-        throw new Error(`Failed to establish WebRTC connection: ${sdpResponse.status}`)
-      }
-
-      const answer = {
-        type: 'answer',
-        sdp: await sdpResponse.text(),
-      }
-      await pc.setRemoteDescription(new RTCSessionDescription(answer))
-
-      // Configure transcription session: prepare initialization message
-      console.log('Initializing transcription session...')
-      const initMessage = {
-        type: 'transcription_session.update',
-        input_audio_format: 'pcm16',
-        input_audio_transcription: {
-          model: 'gpt-4o-transcribe',
-          prompt: '',
-          language: 'en'
-        },
-        turn_detection: {
-          type: 'server_vad',
-          threshold: 0.5,
-          prefix_padding_ms: 300,
-          silence_duration_ms: 500
-        },
-        input_audio_noise_reduction: {
-          type: 'near_field'
-        },
-        include: ['item.input_audio_transcription.logprobs']
-      }
-      // Send init configuration once data channel is open
-      const sendInit = () => {
-        realtimeDcRef.current.send(JSON.stringify(initMessage))
-        console.log('Sent initialization message:', initMessage)
-        // Reset state and enter recording mode
-        setError('')
-        setStreamedTranscription('')
-        setEditedTranscription('')
-        setIsRecording(true)
-      }
-      if (realtimeDcRef.current.readyState === 'open') {
-        sendInit()
-      } else {
-        realtimeDcRef.current.onopen = sendInit
-      }
-    } catch (err) {
-      setError(`Realtime error: ${err.message}`)
-      console.error('Realtime transcription error:', err)
-      stopRealtime()
-    }
-  }
-
-  // Stop realtime transcription
-  const stopRealtime = () => {
-    if (realtimeStreamRef.current) {
-      realtimeStreamRef.current.getTracks().forEach(t => t.stop())
-      realtimeStreamRef.current = null
-    }
-    if (realtimeDcRef.current) {
-      try {
-        realtimeDcRef.current.close()
-      } catch (e) {
-        console.error('Error closing data channel:', e)
-      }
-      realtimeDcRef.current = null
-    }
-    if (realtimePcRef.current) {
-      realtimePcRef.current.close()
-      realtimePcRef.current = null
-    }
-    setIsRecording(false)
-  }
-
-  // Start recording (either realtime or file-based)
+  // Start recording
   const startRecording = async () => {
-    if (isRealtime) {
-      return startRealtime()
-    }
-
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       mediaRecorderRef.current = new MediaRecorder(stream, {
@@ -202,17 +36,14 @@ function App() {
       setIsRecording(true)
       setError('')
       setTranscription('')
-      setEditedTranscription('')
+      setEditedTranscription('') // Clear textarea on new recording
     } catch (err) {
       setError('Failed to access microphone. Please allow microphone access.')
     }
   }
 
-  // Stop recording (handles both modes)
+  // Stop recording
   const stopRecording = () => {
-    if (isRealtime) {
-      return stopRealtime()
-    }
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop()
       setIsRecording(false)
@@ -247,29 +78,15 @@ function App() {
     <div className="container">
       <h1>Audio Transcription</h1>
       <div className="controls">
-        <div className="mode-toggle">
-          <label>
-            <input 
-              type="checkbox" 
-              checked={isRealtime}
-              onChange={() => setIsRealtime(!isRealtime)}
-              disabled={isRecording}
-            />
-            Realtime Mode
-          </label>
-        </div>
         <button onClick={isRecording ? stopRecording : startRecording} disabled={loading}>
           {isRecording ? 'Stop Recording' : 'Start Recording'}
         </button>
-        {loading && !isRealtime && <p>Transcribing...</p>}
+        {loading && <p>Transcribing...</p>}
       </div>
       {error && <p className="error">{error}</p>}
 
       <div className="transcription">
         <h2>Transcription:</h2>
-        {isRealtime && isRecording && (
-          <div className="realtime-indicator">Realtime transcription active...</div>
-        )}
         <textarea
           value={editedTranscription}
           onChange={handleTranscriptionEdit}
