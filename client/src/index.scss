@@ -35,6 +35,10 @@ button {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+
+  &.recording {
+    background: #cb3821;
+  }
 }
 
 button:disabled {
