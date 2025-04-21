@@ -57,3 +57,26 @@ button:disabled {
   background: #f8f9fa;
   border-radius: 4px;
 }
+
+// New styles for recording indicator
+.recording-indicator {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: gray;
+  margin-left: 10px;  // Space from button
+  
+  &.active {
+    background-color: red;
+    animation: flash 1s infinite alternate;  // Slowly flash every 1 second
+  }
+  
+  @keyframes flash {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0.5;  // Fade to half opacity for a subtle flash
+    }
+  }
+}

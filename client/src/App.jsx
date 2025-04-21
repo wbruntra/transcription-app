@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import axios from 'axios'
+import './index.scss'  // Ensure SCSS is imported
 
 function App() {
   const [transcription, setTranscription] = useState('')
@@ -100,6 +101,7 @@ function App() {
     <div className="container">
       <h1>Audio Transcription</h1>
       <div className="controls">
+        <div className={isRecording ? 'recording-indicator active' : 'recording-indicator'}></div>  {/* Flashing red circle indicator */}
         <button
           className={isRecording ? 'recording' : ''}
           onClick={isRecording ? stopRecording : startRecording}
