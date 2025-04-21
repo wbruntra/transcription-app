@@ -53,11 +53,19 @@ app.post('/transcribe', upload.single('audio'), async (req, res) => {
     const mp3Path = `uploads/${audioFile.filename}.mp3`
     await convertToMp3(audioFile.path, mp3Path)
 
+    // Log start time before sending to OpenAI
+    const startTime = Date.now();
+    console.log('Sending transcription request to OpenAI at:', new Date().toISOString());
+
     // Call OpenAI transcription API
     const transcription = await openai.audio.transcriptions.create({
       file: require('fs').createReadStream(mp3Path),
       model: 'gpt-4o-mini-transcribe', 
     })
+
+    // Log end time and duration after receiving response
+    const endTime = Date.now();
+    console.log('Received response from OpenAI at:', new Date().toISOString(), 'Duration:', (endTime - startTime) / 1000, 'seconds');
 
     // Clean up files
     await fs.unlink(audioFile.path)
