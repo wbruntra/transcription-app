@@ -2,13 +2,10 @@ const express = require('express')
 const multer = require('multer')
 const cors = require('cors')
 const { OpenAI } = require('openai')
-const fs = require('fs').promises
 const ffmpeg = require('fluent-ffmpeg')
 const logger = require('morgan')
-// Serve static files from client/dist
 const path = require('path')
-
-const react_client_directory = path.join(__dirname, '../client/dist')
+const fs = require('fs').promises
 
 require('dotenv').config()
 
@@ -21,6 +18,12 @@ app.use(logger('dev'))
 // Middleware
 app.use(cors())
 app.use(express.json())
+
+const react_client_directory = path.join(__dirname, '../client/dist')
+
+// Add this to verify the directory exists
+// // Serve static files from client/dist
+app.use(express.static(react_client_directory))
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -47,10 +50,7 @@ app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
     }
 
     console.log('Received file:', {
-      // originalName: audioFile.originalname,
-      // mimetype: audioFile.mimetype,
       size: audioFile.size,
-      // path: audioFile.path,
     })
 
     // Convert to MP3
@@ -59,7 +59,6 @@ app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
 
     // Log start time before sending to OpenAI
     const startTime = Date.now()
-    // console.log('Sending transcription request to OpenAI at:', new Date().toISOString());
 
     // Call OpenAI transcription API
     const transcription = await openai.audio.transcriptions.create({
@@ -80,6 +79,11 @@ app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
     console.error('Transcription error:', error)
     res.status(500).json({ error: error.message || 'Transcription failed' })
   }
+})
+
+// Serve index.html for all unmatched routes (SPA fallback)
+app.get('/', (req, res) => {
+  res.sendFile(path.join(react_client_directory, 'index.html'))
 })
 
 // Start server
