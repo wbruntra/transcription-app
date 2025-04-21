@@ -179,11 +179,7 @@ function App() {
             </button>
           )}
         </div>
-        <p className="my-2">
-          Press Ctrl + Spacebar to start/stop recording at any time, and Ctrl + X to cancel
-          recording.
-        </p>{' '}
-        {/* Updated documentation */}
+        {/* Removed redundant keyboard commands paragraph */}
       </div>
       {error && <p className="error">{error}</p>}
 
