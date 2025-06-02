@@ -1,9 +1,9 @@
 const express = require('express')
 const router = express.Router()
-const multer = require('multer')
 const { OpenAI } = require('openai')
 const ffmpeg = require('fluent-ffmpeg')
 const fs = require('fs')
+const multer = require('multer')
 
 // Initialize multer
 const upload = multer({ dest: 'uploads/' })
@@ -23,6 +23,10 @@ const convertToMp3 = (inputPath, outputPath) => {
       .save(outputPath)
   })
 }
+
+router.get('/', (req, res) => {
+  res.send('Transcription API is running')
+})
 
 // Transcription endpoint
 router.post('/transcribe', upload.single('audio'), async (req, res) => {
