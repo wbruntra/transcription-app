@@ -1,3 +1,0 @@
-/drop
-/add       client/src/App.jsx
-/add       client/src/styles/custom.scss

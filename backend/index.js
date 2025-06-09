@@ -21,7 +21,7 @@ const react_client_directory = path.join(__dirname, '../client/dist')
 app.use(express.static(react_client_directory))
 
 // Mount the transcriptions router
-const transcriptionsRouter = require('./transcriptions')
+const transcriptionsRouter = require('./transcriptions_v2')
 app.use('/api', transcriptionsRouter)
 
 // Serve index.html for all unmatched routes (SPA fallback)

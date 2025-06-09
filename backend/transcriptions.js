@@ -13,7 +13,6 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
-// Convert WEBM to MP3
 const convertToMp3 = (inputPath, outputPath) => {
   return new Promise((resolve, reject) => {
     ffmpeg(inputPath)
@@ -61,10 +60,10 @@ router.post('/transcribe', upload.single('audio'), async (req, res) => {
     await fs.promises.unlink(audioFile.path)
     await fs.promises.unlink(mp3Path)
 
-    res.json({ transcription: transcription.text })
+    res.send(transcription.text)
   } catch (error) {
     console.error('Transcription error:', error)
-    res.status(500).json({ error: error.message || 'Transcription failed' })
+    res.status(500).send(error.message || 'Transcription failed')
   }
 })
 
