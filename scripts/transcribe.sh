@@ -33,7 +33,7 @@ if pgrep -f "ffmpeg.*$MP3_FILE" > /dev/null; then
 fi
 
 # This is the "start" action (first hotkey press)
-notify-send "🎤 Recording started!" "Press shortcut again to STOP" -t 2000
+dunstify "🎤 Recording started! (v2.2)" "Press shortcut again to STOP" -t 2000
 
 # Start recording audio from PulseAudio directly to MP3 for up to 60 seconds
 ffmpeg -f pulse -i default -t 60 -codec:a libmp3lame -y "$MP3_FILE" 2>/dev/null
@@ -41,18 +41,19 @@ ffmpeg -f pulse -i default -t 60 -codec:a libmp3lame -y "$MP3_FILE" 2>/dev/null
 # After recording ends (either by timeout or being killed), continue:
 # Check if we got any audio
 if [ ! -f "$MP3_FILE" ] || [ ! -s "$MP3_FILE" ]; then
-  notify-send "❌ Recording failed" "No audio captured"
+  dunstify "❌ Recording failed" "No audio captured" -t 2000
   exit 1
 fi
 
-notify-send "🔄 Processing..." "Transcribing audio" -t 1000
+# Use a consistent notification ID for processing and final result
+dunstify "🔄 Processing..." "Transcribing audio" -t 2000 -r 1001
 
 # Send the MP3 file to the transcription API endpoint
 RESPONSE=$(curl -s -X POST "$ENDPOINT" -F "audio=@$MP3_FILE")
 
 # Check if the API response is empty
 if [ -z "$RESPONSE" ]; then
-  notify-send "❌ Transcription failed" "Empty response from server"
+  dunstify "❌ Transcription failed" "Empty response from server" -t 2000
   rm -f "$MP3_FILE"
   exit 1
 fi
@@ -68,4 +69,4 @@ xdotool key ctrl+v
 rm -f "$MP3_FILE"
 
 # Notify the user of success, showing the first 30 characters of the transcription
-notify-send "✅ Done!" "${RESPONSE:0:30}..." -t 800
+dunstify "✅ Done!" "${RESPONSE:0:30}..." -t 2000 -r 1001
