@@ -3,8 +3,6 @@ const cors = require('cors')
 const logger = require('morgan')
 const path = require('path')
 
-require('dotenv').config()
-
 const app = express()
 
 // Middleware for logging requests
