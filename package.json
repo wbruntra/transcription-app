@@ -5,16 +5,17 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon backend/index.js",
-    "server": "node backend/index.js",
+    "dev": "bun --watch backend/index.js",
+    "server": "bun backend/index.js",
     "client": "cd client && npm run dev",
-    "start": "node backend/index.js"
+    "start": "bun backend/index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "bun": "^1.2.23",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
