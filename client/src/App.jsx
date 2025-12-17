@@ -233,7 +233,7 @@ function App() {
     : 'Idle'
 
   return (
-    <div className="container">
+    <div className="container" data-bs-theme="dark">
       <h1>OpenAI-Powered Audio Transcription</h1>
 
       <div className="alert alert-info mt-3">

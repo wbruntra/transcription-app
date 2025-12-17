@@ -1,3 +1,2 @@
-@use 'bootstrap/scss/bootstrap';
-// @use './bootstrap4-compatibility.scss';
-@use './custom' as *;
+@import 'bootstrap/scss/bootstrap';
+@import './custom';

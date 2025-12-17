@@ -2,14 +2,14 @@ body {
   font-family: Inter, sans-serif;
   margin: 0;
   padding: 0;
-  background-color: #f0f0f0;
+  background-color: var(--bs-body-bg);
 }
 
 .container {
   max-width: 900px;
   margin: 50px auto;
   padding: 20px;
-  background: white;
+  background-color: var(--bs-bg-surface);
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
@@ -54,7 +54,7 @@ button:disabled {
 .transcription {
   margin-top: 20px;
   padding: 10px;
-  background: #f8f9fa;
+  background-color: var(--bs-secondary-bg);
   border-radius: 4px;
 }
 
