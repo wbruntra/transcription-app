@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import axios from 'axios'
 
 function App() {
+  const [provider, setProvider] = useState('openai')
   const [transcription, setTranscription] = useState('')
   const [editedTranscription, setEditedTranscription] = useState('')
   const [error, setError] = useState('')
@@ -168,7 +169,7 @@ function App() {
     formData.append('audio', audioBlob, 'recording.webm')
 
     try {
-      const response = await axios.post('/api/transcribe', formData, {
+      const response = await axios.post(`/api/transcribe?provider=${provider}`, formData, {
         signal: abortControllerRef.current.signal,
       })
       setTranscription(response.data)
@@ -235,6 +236,36 @@ function App() {
   return (
     <div className="container" data-bs-theme="dark">
       <h1>OpenAI-Powered Audio Transcription</h1>
+
+      <div className="d-flex align-items-center gap-3 mt-3">
+        <span className="fw-semibold">Provider:</span>
+        <div className="btn-group btn-group-sm" role="group">
+          <input
+            type="radio"
+            className="btn-check"
+            name="provider"
+            id="provider-openai"
+            value="openai"
+            checked={provider === 'openai'}
+            onChange={() => setProvider('openai')}
+          />
+          <label className="btn btn-outline-secondary" htmlFor="provider-openai">
+            OpenAI
+          </label>
+          <input
+            type="radio"
+            className="btn-check"
+            name="provider"
+            id="provider-xai"
+            value="xai"
+            checked={provider === 'xai'}
+            onChange={() => setProvider('xai')}
+          />
+          <label className="btn btn-outline-secondary" htmlFor="provider-xai">
+            xAI
+          </label>
+        </div>
+      </div>
 
       <div className="alert alert-info mt-3">
         <h5>Keyboard Commands</h5>

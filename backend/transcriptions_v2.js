@@ -1,33 +1,38 @@
-const express = require('express')
-const router = express.Router()
-const multer = require('multer')
-const { transcribeFile } = require('./services/transcribe')
+import { Hono } from 'hono'
+import { transcribeFile, transcribeFileXai } from './services/transcribe.js'
 
-// Use memory storage instead of disk storage
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 50 * 1024 * 1024, // 50MB limit
-  },
-})
+const router = new Hono()
 
-router.get('/', (req, res) => {
-  res.send('Transcription API is running')
-})
+router.get('/', (c) => c.text('Transcription API is running'))
 
-router.post('/transcribe', upload.single('audio'), async (req, res) => {
+router.post('/transcribe', async (c) => {
+  const formData = await c.req.formData()
+  const file = formData.get('audio')
+
+  if (!file || !(file instanceof File)) {
+    return c.json({ error: 'No audio file uploaded' }, 400)
+  }
+
+  // Normalize Web API File to the shape the service expects
+  const audioFile = {
+    buffer: Buffer.from(await file.arrayBuffer()),
+    mimetype: file.type,
+    originalname: file.name,
+    size: file.size,
+  }
+
+  const provider = c.req.query('provider')
+
   try {
-    const audioFile = req.file
-    if (!audioFile) {
-      return res.status(400).json({ error: 'No audio file uploaded' })
-    }
-
-    const transcribedText = await transcribeFile(audioFile)
-    res.send(transcribedText)
+    const text =
+      provider === 'xai'
+        ? await transcribeFileXai(audioFile)
+        : await transcribeFile(audioFile)
+    return c.text(text)
   } catch (error) {
     console.error('Transcription error:', error)
-    res.status(500).send(error.message || 'Transcription failed')
+    return c.text(error.message || 'Transcription failed', 500)
   }
 })
 
-module.exports = router
+export default router

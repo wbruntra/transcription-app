@@ -2,10 +2,11 @@ module.exports = {
   apps: [
     {
       name: 'transcription-app',
-      script: 'npm',
-      args: 'start',
+      script: 'bun',
+      args: 'run start',
       env: {
         NODE_ENV: 'production',
+        PORT: 12050,
       },
       // Memory management settings
       max_memory_restart: '350M', // Restart if memory exceeds 350MB

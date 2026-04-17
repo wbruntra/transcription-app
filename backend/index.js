@@ -1,34 +1,20 @@
-const express = require('express')
-const cors = require('cors')
-const logger = require('morgan')
-const path = require('path')
+import { Hono } from 'hono'
+import { cors } from 'hono/cors'
+import { logger } from 'hono/logger'
+import { serveStatic } from 'hono/bun'
+import transcriptionsRouter from './transcriptions_v2.js'
 
-const app = express()
+const app = new Hono()
 
-// Middleware for logging requests
-app.use(logger('dev'))
+app.use('*', logger())
+app.use('*', cors())
 
-// Middleware
-app.use(cors())
-app.use(express.json())
+app.route('/api', transcriptionsRouter)
 
-const react_client_directory = path.join(__dirname, '../client/dist')
+// Serve built client files
+app.use('/*', serveStatic({ root: './client/dist' }))
 
-// Add this to verify the directory exists
-// Serve static files from client/dist
-app.use(express.static(react_client_directory))
+// SPA fallback
+app.get('*', serveStatic({ path: './client/dist/index.html' }))
 
-// Mount the transcriptions router
-const transcriptionsRouter = require('./transcriptions_v2')
-app.use('/api', transcriptionsRouter)
-
-// Serve index.html for all unmatched routes (SPA fallback)
-app.get('/', (req, res) => {
-  res.sendFile(path.join(react_client_directory, 'index.html'))
-})
-
-// Start server
-const PORT = process.env.PORT || 12050
-app.listen(PORT, () => {
-  console.log(`Backend running on http://localhost:${PORT}`)
-})
+export default app
