@@ -11,6 +11,9 @@ function App() {
   const [recordingTime, setRecordingTime] = useState(0)
   const [audioLevel, setAudioLevel] = useState(0) // NEW: Audio level for visualization
 
+  const providerRef = useRef(provider)
+  useEffect(() => { providerRef.current = provider }, [provider])
+
   const shouldTranscribeRef = useRef(true)
   const mediaRecorderRef = useRef(null)
   const audioChunksRef = useRef([])
@@ -169,7 +172,7 @@ function App() {
     formData.append('audio', audioBlob, 'recording.webm')
 
     try {
-      const response = await axios.post(`/api/transcribe?provider=${provider}`, formData, {
+      const response = await axios.post(`/api/transcribe?provider=${providerRef.current}`, formData, {
         signal: abortControllerRef.current.signal,
       })
       setTranscription(response.data)
