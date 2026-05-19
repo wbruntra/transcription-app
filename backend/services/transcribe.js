@@ -2,12 +2,10 @@ import { OpenAI } from 'openai'
 import ffmpeg from 'fluent-ffmpeg'
 import { Readable, PassThrough } from 'stream'
 
-// Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
-// Convert buffer to MP3 buffer
 const convertToMp3Buffer = (inputBuffer) => {
   return new Promise((resolve, reject) => {
     const outputStream = new PassThrough()
@@ -28,12 +26,10 @@ const convertToMp3Buffer = (inputBuffer) => {
   })
 }
 
-// Create a File object from buffer (Node.js 20+)
 export function createFileFromBuffer(buffer, filename = 'audio.mp3', mimeType = 'audio/mpeg') {
   return new File([buffer], filename, { type: mimeType })
 }
 
-// Check if file is already in MP3 format
 export function isMp3File(audioFile) {
   return (
     audioFile.mimetype === 'audio/mpeg' ||
@@ -42,7 +38,6 @@ export function isMp3File(audioFile) {
   )
 }
 
-// Process audio file and convert to MP3 if necessary
 export async function processAudioFile(audioFile) {
   console.log('Received file:', {
     size: audioFile.size,
@@ -63,148 +58,119 @@ export async function processAudioFile(audioFile) {
   return finalBuffer
 }
 
-// Transcribe audio using OpenAI
-export async function transcribeAudio(audioBuffer) {
-  const startTime = Date.now()
-  const audioFile = createFileFromBuffer(audioBuffer, 'audio.mp3', 'audio/mpeg')
+// --- Provider registry ---
 
-  const transcription = await openai.audio.transcriptions.create({
-    file: audioFile,
-    model: 'gpt-4o-mini-transcribe-2025-12-15',
-  })
-
-  const endTime = Date.now()
-  console.log('Transcription Response Time:', (endTime - startTime) / 1000, 'seconds')
-
-  return transcription.text
-}
-
-// Main service function to handle complete transcription workflow
-export async function transcribeFile(audioFile) {
-  if (!audioFile) {
-    throw new Error('No audio file provided')
-  }
-
-  const audioBuffer = await processAudioFile(audioFile)
-  const transcribedText = await transcribeAudio(audioBuffer)
-
-  return transcribedText
-}
-
-// Transcribe audio using xAI STT REST API
-export async function transcribeXai(audioBuffer) {
-  const startTime = Date.now()
-
-  const formData = new FormData()
-  formData.append('format', 'true')
-  formData.append('language', 'en')
-  // file must be the last field per xAI docs
-  formData.append('file', new Blob([audioBuffer], { type: 'audio/mpeg' }), 'audio.mp3')
-
-  const response = await fetch('https://api.x.ai/v1/stt', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${process.env.XAI_API_KEY}`,
+const providers = {
+  openai: {
+    async transcribe(audioBuffer) {
+      const audioFile = createFileFromBuffer(audioBuffer, 'audio.mp3', 'audio/mpeg')
+      const transcription = await openai.audio.transcriptions.create({
+        file: audioFile,
+        model: 'gpt-4o-mini-transcribe-2025-12-15',
+      })
+      return transcription.text
     },
-    body: formData,
-  })
+  },
 
-  if (!response.ok) {
-    const text = await response.text()
-    throw new Error(`xAI STT error ${response.status}: ${text}`)
-  }
+  xai: {
+    async transcribe(audioBuffer) {
+      const formData = new FormData()
+      formData.append('format', 'true')
+      formData.append('language', 'en')
+      formData.append('file', new Blob([audioBuffer], { type: 'audio/mpeg' }), 'audio.mp3')
 
-  const result = await response.json()
-  const endTime = Date.now()
-  console.log('xAI Transcription Response Time:', (endTime - startTime) / 1000, 'seconds')
+      const response = await fetch('https://api.x.ai/v1/stt', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.XAI_API_KEY}`,
+        },
+        body: formData,
+      })
 
-  return result.text
-}
+      if (!response.ok) {
+        const text = await response.text()
+        throw new Error(`xAI STT error ${response.status}: ${text}`)
+      }
 
-// Main service function for xAI transcription
-export async function transcribeFileXai(audioFile) {
-  if (!audioFile) {
-    throw new Error('No audio file provided')
-  }
-
-  const audioBuffer = await processAudioFile(audioFile)
-  return transcribeXai(audioBuffer)
-}
-
-// Transcribe audio using local Danarch Whisper instance
-export async function transcribeDanarch(audioBuffer) {
-  const startTime = Date.now()
-
-  const formData = new FormData()
-  formData.append('model', 'whisper-1')
-  formData.append('file', new Blob([audioBuffer], { type: 'audio/mpeg' }), 'audio.mp3')
-
-  const response = await fetch('http://danarch:8766/v1/audio/transcriptions', {
-    method: 'POST',
-    body: formData,
-  })
-
-  if (!response.ok) {
-    const text = await response.text()
-    throw new Error(`Danarch STT error ${response.status}: ${text}`)
-  }
-
-  const result = await response.json()
-  const endTime = Date.now()
-  console.log('Danarch Transcription Response Time:', (endTime - startTime) / 1000, 'seconds')
-
-  return result.text
-}
-
-// Main service function for Danarch transcription
-export async function transcribeFileDanarch(audioFile) {
-  if (!audioFile) {
-    throw new Error('No audio file provided')
-  }
-
-  const audioBuffer = await processAudioFile(audioFile)
-  return transcribeDanarch(audioBuffer)
-}
-
-// Transcribe audio using OpenRouter STT API
-export async function transcribeOpenRouter(audioBuffer) {
-  const startTime = Date.now()
-
-  const base64Audio = audioBuffer.toString('base64')
-
-  const response = await fetch('https://openrouter.ai/api/v1/audio/transcriptions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-      'Content-Type': 'application/json',
+      const result = await response.json()
+      return result.text
     },
-    body: JSON.stringify({
-      model: 'qwen/qwen3-asr-flash-2026-02-10',
-      input_audio: {
-        data: base64Audio,
-        format: 'mp3',
-      },
-    }),
-  })
+  },
 
-  if (!response.ok) {
-    const text = await response.text()
-    throw new Error(`OpenRouter STT error ${response.status}: ${text}`)
-  }
+  danarch: {
+    async transcribe(audioBuffer) {
+      const formData = new FormData()
+      formData.append('model', 'whisper-1')
+      formData.append('file', new Blob([audioBuffer], { type: 'audio/mpeg' }), 'audio.mp3')
 
-  const result = await response.json()
-  const endTime = Date.now()
-  console.log('OpenRouter Transcription Response Time:', (endTime - startTime) / 1000, 'seconds')
+      const response = await fetch('http://danarch:8766/v1/audio/transcriptions', {
+        method: 'POST',
+        body: formData,
+      })
 
-  return result.text
+      if (!response.ok) {
+        const text = await response.text()
+        throw new Error(`Danarch STT error ${response.status}: ${text}`)
+      }
+
+      const result = await response.json()
+      return result.text
+    },
+  },
+
+  openrouter: {
+    async transcribe(audioBuffer) {
+      const base64Audio = audioBuffer.toString('base64')
+
+      const response = await fetch('https://openrouter.ai/api/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'qwen/qwen3-asr-flash-2026-02-10',
+          input_audio: {
+            data: base64Audio,
+            format: 'mp3',
+          },
+        }),
+      })
+
+      if (!response.ok) {
+        const text = await response.text()
+        throw new Error(`OpenRouter STT error ${response.status}: ${text}`)
+      }
+
+      const result = await response.json()
+      return result.text
+    },
+  },
 }
 
-// Main service function for OpenRouter transcription
-export async function transcribeFileOpenRouter(audioFile) {
+export function getAvailableProviders() {
+  return Object.keys(providers)
+}
+
+export function getProvider(name) {
+  return providers[name] ?? null
+}
+
+export async function transcribeFile(audioFile, provider = 'xai') {
   if (!audioFile) {
     throw new Error('No audio file provided')
   }
 
   const audioBuffer = await processAudioFile(audioFile)
-  return transcribeOpenRouter(audioBuffer)
+
+  const impl = providers[provider]
+  if (!impl) {
+    throw new Error(`Unknown transcription provider: ${provider}`)
+  }
+
+  const startTime = Date.now()
+  const text = await impl.transcribe(audioBuffer)
+  console.log(`${provider} Transcription Response Time:`, (Date.now() - startTime) / 1000, 'seconds')
+
+  return text
 }
