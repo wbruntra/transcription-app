@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { transcribeFile, transcribeFileXai } from './services/transcribe.js'
+import { transcribeFile, transcribeFileXai, transcribeFileDanarch, transcribeFileOpenRouter } from './services/transcribe.js'
 
 const router = new Hono()
 
@@ -25,9 +25,13 @@ router.post('/transcribe', async (c) => {
 
   try {
     const text =
-      provider === 'xai'
-        ? await transcribeFileXai(audioFile)
-        : await transcribeFile(audioFile)
+      provider === 'openai'
+        ? await transcribeFile(audioFile)
+        : provider === 'danarch'
+        ? await transcribeFileDanarch(audioFile)
+        : provider === 'openrouter'
+        ? await transcribeFileOpenRouter(audioFile)
+        : await transcribeFileXai(audioFile)
     return c.text(text)
   } catch (error) {
     console.error('Transcription error:', error)

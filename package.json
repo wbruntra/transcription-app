@@ -4,10 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "bun --watch backend/bin/server.ts",
+    "backend": "bun --watch backend/bin/server.ts",
+    "client": "cd client && bun run dev",
+    "dev": "concurrently \"bun run backend\" \"bun run client\"",
     "server": "bun backend/index.js",
-    "client": "cd client && npm run dev",
-    "start": "bun backend/index.js"
+    "start": "bun backend/bin/server.ts",
+    "build:go": "cd go-backend && go build -o server ."
   },
   "keywords": [],
   "author": "",

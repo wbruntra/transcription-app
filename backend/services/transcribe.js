@@ -130,3 +130,81 @@ export async function transcribeFileXai(audioFile) {
   const audioBuffer = await processAudioFile(audioFile)
   return transcribeXai(audioBuffer)
 }
+
+// Transcribe audio using local Danarch Whisper instance
+export async function transcribeDanarch(audioBuffer) {
+  const startTime = Date.now()
+
+  const formData = new FormData()
+  formData.append('model', 'whisper-1')
+  formData.append('file', new Blob([audioBuffer], { type: 'audio/mpeg' }), 'audio.mp3')
+
+  const response = await fetch('http://danarch:8766/v1/audio/transcriptions', {
+    method: 'POST',
+    body: formData,
+  })
+
+  if (!response.ok) {
+    const text = await response.text()
+    throw new Error(`Danarch STT error ${response.status}: ${text}`)
+  }
+
+  const result = await response.json()
+  const endTime = Date.now()
+  console.log('Danarch Transcription Response Time:', (endTime - startTime) / 1000, 'seconds')
+
+  return result.text
+}
+
+// Main service function for Danarch transcription
+export async function transcribeFileDanarch(audioFile) {
+  if (!audioFile) {
+    throw new Error('No audio file provided')
+  }
+
+  const audioBuffer = await processAudioFile(audioFile)
+  return transcribeDanarch(audioBuffer)
+}
+
+// Transcribe audio using OpenRouter STT API
+export async function transcribeOpenRouter(audioBuffer) {
+  const startTime = Date.now()
+
+  const base64Audio = audioBuffer.toString('base64')
+
+  const response = await fetch('https://openrouter.ai/api/v1/audio/transcriptions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'qwen/qwen3-asr-flash-2026-02-10',
+      input_audio: {
+        data: base64Audio,
+        format: 'mp3',
+      },
+    }),
+  })
+
+  if (!response.ok) {
+    const text = await response.text()
+    throw new Error(`OpenRouter STT error ${response.status}: ${text}`)
+  }
+
+  const result = await response.json()
+  const endTime = Date.now()
+  console.log('OpenRouter Transcription Response Time:', (endTime - startTime) / 1000, 'seconds')
+
+  return result.text
+}
+
+// Main service function for OpenRouter transcription
+export async function transcribeFileOpenRouter(audioFile) {
+  if (!audioFile) {
+    throw new Error('No audio file provided')
+  }
+
+  const audioBuffer = await processAudioFile(audioFile)
+  return transcribeOpenRouter(audioBuffer)
+}
