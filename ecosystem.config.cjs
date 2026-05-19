@@ -2,9 +2,8 @@ module.exports = {
   apps: [
     {
       name: 'transcription-app',
-      cwd: '/home/william/workspace/transcription-app/go-backend',
-      script: './run.sh',
-      exec_interpreter: 'bash',
+      cwd: '/home/william/workspace/transcription-app/backend',
+      script: './bin/server.ts',
       env: {
         NODE_ENV: 'production',
         PORT: 12050,

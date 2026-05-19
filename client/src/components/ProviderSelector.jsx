@@ -51,12 +51,12 @@ export function ProviderSelector({ provider, onProviderChange }) {
           type="radio"
           className="btn-check"
           name="provider"
-          id="provider-openrouter"
-          value="openrouter"
-          checked={provider === 'openrouter'}
-          onChange={() => onProviderChange('openrouter')}
+          id="provider-qwen"
+          value="qwen"
+          checked={provider === 'qwen'}
+          onChange={() => onProviderChange('qwen')}
         />
-        <label className="btn btn-outline-secondary" htmlFor="provider-openrouter">
+        <label className="btn btn-outline-secondary" htmlFor="provider-qwen">
           Qwen
         </label>
       </div>

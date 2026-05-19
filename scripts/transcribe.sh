@@ -5,7 +5,7 @@ export DISPLAY=${DISPLAY:-:0}
 
 # Define variables for API endpoint and temp file
 ENDPOINT="http://localhost:12050/api/transcribe"
-MP3_FILE="/tmp/recording.mp3"
+AUDIO_FILE="/tmp/recording.ogg"
 STATUS_FILE="/tmp/transcribe-status.json"
 START_FILE="/tmp/transcribe-start.time"
 
@@ -101,7 +101,7 @@ if [ -f "$STATUS_FILE" ]; then
     if [ -n "$CURRENT_PID" ] && [ "$CURRENT_PID" != "null" ] && [ "$CURRENT_PID" != "" ]; then
       kill -TERM "$CURRENT_PID" 2>/dev/null
     else
-      pkill -f "ffmpeg.*$MP3_FILE"
+      pkill -f "ffmpeg.*$AUDIO_FILE"
     fi
 
     # Wait briefly to ensure ffmpeg has stopped
@@ -115,9 +115,9 @@ fi
 # This is the "start" action (first hotkey press)
 # Status indicator will show recording state
 
-# Start recording audio from PulseAudio directly to MP3 for up to 60 seconds
+# Start recording audio from PulseAudio directly to OGG/Opus for up to 60 seconds
 # Run ffmpeg in the background so we can capture PID and update status
-ffmpeg -f pulse -i default -t 60 -codec:a libmp3lame -y "$MP3_FILE" 2>/dev/null &
+ffmpeg -f pulse -i default -t 60 -ar 16000 -ac 1 -c:a libopus -b:a 32k -y "$AUDIO_FILE" 2>/dev/null &
 FFMPEG_PID=$!
 date +%s > "$START_FILE"
 write_status "recording" "" "" "" "$FFMPEG_PID"
@@ -127,7 +127,7 @@ wait "$FFMPEG_PID" 2>/dev/null
 
 # After recording ends (either by timeout or being killed), continue:
 # Check if we got any audio
-if [ ! -f "$MP3_FILE" ] || [ ! -s "$MP3_FILE" ]; then
+if [ ! -f "$AUDIO_FILE" ] || [ ! -s "$AUDIO_FILE" ]; then
   write_status "error" "" "" "No audio captured" ""
   exit 1
 fi
@@ -146,8 +146,8 @@ else
 fi
 write_status "processing" "$DURATION" "" "" "$$"
 
-# Send the MP3 file to the transcription API endpoint
-RESPONSE=$(curl -s -X POST "$ENDPOINT" -F "audio=@$MP3_FILE")
+# Send the OGG file to the transcription API endpoint
+RESPONSE=$(curl -s -X POST "$ENDPOINT" -F "audio=@$AUDIO_FILE;type=audio/ogg")
 
 # Check if the API response is empty
 if [ -z "$RESPONSE" ]; then
@@ -164,7 +164,7 @@ sleep 0.6
 xdotool key ctrl+v
 
 # Clean up temporary file
-rm -f "$MP3_FILE"
+rm -f "$AUDIO_FILE"
 
 # Update status to done with a short preview
 PREVIEW="${RESPONSE:0:60}"

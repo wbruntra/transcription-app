@@ -24,7 +24,7 @@ router.post('/transcribe', async (c) => {
   const provider = c.req.query('provider')
 
   try {
-    const text = await transcribeFile(audioFile, provider || 'xai')
+    const text = await transcribeFile(audioFile, provider || 'openai')
     return c.text(text)
   } catch (error) {
     console.error('Transcription error:', error)
