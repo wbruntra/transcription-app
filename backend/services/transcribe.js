@@ -1,6 +1,7 @@
 import { OpenAI } from 'openai'
 import ffmpeg from 'fluent-ffmpeg'
 import { Readable, PassThrough } from 'stream'
+import * as secrets from './secrets.js'
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -112,7 +113,7 @@ const providers = {
       formData.append('model', 'whisper-1')
       formData.append('file', new Blob([audioBuffer], { type: mimeType }), filename)
 
-      const response = await fetch('http://danarch:8766/v1/audio/transcriptions', {
+      const response = await fetch(secrets.DANARCH_API_URL, {
         method: 'POST',
         body: formData,
       })
