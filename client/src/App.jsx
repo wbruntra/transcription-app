@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { useRecordingTimer } from './hooks/useRecordingTimer'
 import { useBatchRecorder } from './hooks/useBatchRecorder'
@@ -8,6 +8,7 @@ import { RecordingControls } from './components/RecordingControls'
 import { TranscriptionDisplay } from './components/TranscriptionDisplay'
 
 function App() {
+  const [providers, setProviders] = useState([])
   const [provider, setProvider] = useState('openai')
   const [editedTranscription, setEditedTranscription] = useState('')
   const [streamingText, setStreamingText] = useState('')
@@ -17,6 +18,13 @@ function App() {
   const [audioLevel, setAudioLevel] = useState(0)
 
   const textareaRef = useRef(null)
+
+  useEffect(() => {
+    fetch('/api/providers')
+      .then((res) => res.json())
+      .then((data) => setProviders(data))
+      .catch(() => {})
+  }, [])
 
   const recordingTime = useRecordingTimer(isRecording)
 
@@ -66,7 +74,7 @@ function App() {
     onStop: handleStop,
   })
 
-  const isStreamingMode = provider === 'xai'
+  const isStreamingMode = providers.find((p) => p.id === provider)?.streaming ?? false
 
   const handleToggleRecording = useCallback(() => {
     if (isRecording) {
@@ -118,11 +126,11 @@ function App() {
     <div className="container" data-bs-theme="dark">
       <h1>OpenAI-Powered Audio Transcription</h1>
 
-      <ProviderSelector provider={provider} onProviderChange={setProvider} />
+      <ProviderSelector providers={providers} provider={provider} onProviderChange={setProvider} />
 
-      {provider === 'xai' && !isRecording && (
+      {isStreamingMode && !isRecording && (
         <div className="badge bg-info text-dark mt-2">
-          xAI uses real-time streaming transcription
+          {provider} uses real-time streaming transcription
         </div>
       )}
 

@@ -65,6 +65,8 @@ export async function processAudioFile(audioFile) {
 
 const providers = {
   openai: {
+    label: 'OpenAI',
+    streaming: false,
     async transcribe(audioBuffer, mimeType, filename) {
       const audioFile = createFileFromBuffer(audioBuffer, filename, mimeType)
       const transcription = await openai.audio.transcriptions.create({
@@ -76,6 +78,8 @@ const providers = {
   },
 
   xai: {
+    label: 'xAI',
+    streaming: true,
     async transcribe(audioBuffer, mimeType, filename) {
       const formData = new FormData()
       formData.append('format', 'true')
@@ -101,6 +105,8 @@ const providers = {
   },
 
   danarch: {
+    label: 'Danarch',
+    streaming: false,
     async transcribe(audioBuffer, mimeType, filename) {
       const formData = new FormData()
       formData.append('model', 'whisper-1')
@@ -122,6 +128,8 @@ const providers = {
   },
 
   qwen: {
+    label: 'Qwen',
+    streaming: false,
     async transcribe(audioBuffer, mimeType) {
       const base64Audio = audioBuffer.toString('base64')
       const format = mimeType === 'audio/ogg' ? 'ogg' : 'mp3'
@@ -150,10 +158,50 @@ const providers = {
       return result.text
     },
   },
+
+  nvidia: {
+    label: 'Nvidia',
+    streaming: false,
+    async transcribe(audioBuffer, mimeType) {
+      const base64Audio = audioBuffer.toString('base64')
+      const format = mimeType === 'audio/ogg' ? 'ogg' : 'mp3'
+
+      const response = await fetch('https://openrouter.ai/api/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'nvidia/parakeet-tdt-0.6b-v3',
+          input_audio: {
+            data: base64Audio,
+            format,
+          },
+        }),
+      })
+
+      if (!response.ok) {
+        const text = await response.text()
+        throw new Error(`OpenRouter STT error ${response.status}: ${text}`)
+      }
+
+      const result = await response.json()
+      return result.text
+    },
+  },
 }
 
 export function getAvailableProviders() {
   return Object.keys(providers)
+}
+
+export function getProviders() {
+  return Object.entries(providers).map(([id, impl]) => ({
+    id,
+    label: impl.label,
+    streaming: impl.streaming,
+  }))
 }
 
 export function getProvider(name) {

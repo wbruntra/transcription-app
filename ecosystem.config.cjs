@@ -2,8 +2,9 @@ module.exports = {
   apps: [
     {
       name: 'transcription-app',
-      cwd: '/home/william/workspace/transcription-app/backend',
-      script: './bin/server.ts',
+      cwd: '/home/william/workspace/transcription-app',
+      script: './backend/bin/server.ts',
+      interpreter: 'bun',
       env: {
         NODE_ENV: 'production',
         PORT: 12050,

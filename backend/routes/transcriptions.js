@@ -1,9 +1,11 @@
 import { Hono } from 'hono'
-import { transcribeFile } from '../services/transcribe.js'
+import { transcribeFile, getProviders } from '../services/transcribe.js'
 
 const router = new Hono()
 
 router.get('/', (c) => c.text('Transcription API is running'))
+
+router.get('/providers', (c) => c.json(getProviders()))
 
 router.post('/transcribe', async (c) => {
   const formData = await c.req.formData()
@@ -24,7 +26,7 @@ router.post('/transcribe', async (c) => {
   const provider = c.req.query('provider')
 
   try {
-    const text = await transcribeFile(audioFile, provider || 'openai')
+    const text = await transcribeFile(audioFile, provider || 'nvidia')
     return c.text(text)
   } catch (error) {
     console.error('Transcription error:', error)
